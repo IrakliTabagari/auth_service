@@ -1,3 +1,4 @@
+using AuthService.Api.Middlewares;
 using AuthService.Application;
 using AuthService.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
@@ -30,11 +31,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

@@ -2,10 +2,10 @@
 
 namespace AuthService.Application.Common.Interfaces.Persistence;
 
-public interface IUnitOfWork : IDisposable
+public interface IUnitOfWork : IAsyncDisposable
 {
     IRepository<User, int> UserRepository { get; }
     
-    void Save();
-    void Dispose();
+    Task SaveAsync();
+    ValueTask DisposeAsync();
 }

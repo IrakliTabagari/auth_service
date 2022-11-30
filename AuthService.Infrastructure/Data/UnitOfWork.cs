@@ -6,49 +6,44 @@ namespace AuthService.Infrastructure.Data;
 
 public class UnitOfWork : IUnitOfWork
 {
-    private readonly AuthDbContext _context;
+    
+    #region Properties
     
     private Repository<User, int> _userRepository;
+    public IRepository<User, int> UserRepository =>
+        _userRepository ?? (_userRepository = new Repository<User, int>(_dbContext));
     
-    public UnitOfWork(AuthDbContext context)
-    {
-        _context = context;
-    }
-
-    public IRepository<User, int> UserRepository
-    {
-        get
-        {
-            _userRepository ??= new Repository<User, int>(_context);
-            return _userRepository;
-        }
-    }
-
-
-    public void Save()
-    {
-        _context.SaveChanges();
-    }
-
+    #endregion
+    
+    private readonly ApplicationDbContext _dbContext;
     private bool _disposed = false;
 
-
-
-    protected virtual void Dispose(bool disposing)
+    public UnitOfWork(ApplicationDbContext dbContext)
     {
-        if (!this._disposed)
-        {
-            if (disposing)
-            {
-                _context.Dispose();
-            }
-        }
-        this._disposed = true;
+        _dbContext = dbContext;
     }
 
-    public void Dispose()
+
+    public async Task SaveAsync()
     {
-        Dispose(true);
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsync(true);
         GC.SuppressFinalize(this);
+    }
+ 
+    protected virtual async ValueTask DisposeAsync(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)         
+            {
+                await _dbContext.DisposeAsync();
+            }
+            _disposed = true;
+        }
     }
 }

@@ -14,28 +14,27 @@ public class LoginService : ILoginService
         _unitOfWork = unitOfWork;
     }
 
-    public LoginResult Login(string email, string password)
+    public async Task<LoginResult> Login(string email, string password)
     {
-        var existeduser = _unitOfWork.UserRepository
-            .Query()
-            .FirstOrDefault(x => x.Email == email && x.Password == password);
+        var existedUser = await _unitOfWork.UserRepository
+            .FindOneAsync(filter: x => x.Email == email && x.Password == password);
         
-        if (existeduser is null)
+        if (existedUser is null)
         {
             throw new Exception("User with given email and password does not exists");
         }
 
-        var token = _jwtTokenGenerator.GenerateToken(
-            userId: existeduser.Id, 
-            firstName: existeduser.FirstName, 
-            lastName: existeduser.LastName,
-            email: existeduser.Email);
+        var token = await _jwtTokenGenerator.GenerateToken(
+            userId: existedUser.Id, 
+            firstName: existedUser.FirstName, 
+            lastName: existedUser.LastName,
+            email: existedUser.Email);
 
         return new LoginResult(
-            existeduser.Id,
-            existeduser.FirstName,
-            existeduser.LastName,
-            existeduser.Email,
+            existedUser.Id,
+            existedUser.FirstName,
+            existedUser.LastName,
+            existedUser.Email,
             token
         );
     }

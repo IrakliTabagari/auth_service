@@ -2,5 +2,5 @@
 
 public interface IRegistrationService
 {
-    RegistrationResult Register(string firstName, string lastName, string email, string password);
+    Task<RegistrationResult> Register(string firstName, string lastName, string email, string password);
 }

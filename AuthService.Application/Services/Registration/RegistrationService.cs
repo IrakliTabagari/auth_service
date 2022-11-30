@@ -17,7 +17,7 @@ public class RegistrationService : IRegistrationService
         _unitOfWork = unitOfWork;
     }
 
-    public RegistrationResult Register(string firstName, string lastName, string email, string password)
+    public async Task<RegistrationResult> Register(string firstName, string lastName, string email, string password)
     {
         if (_unitOfWork.UserRepository.Any(filter: x => x.Email == email))
         {

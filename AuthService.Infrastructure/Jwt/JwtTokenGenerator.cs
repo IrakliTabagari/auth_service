@@ -16,7 +16,7 @@ public class JwtTokenGenerator :IJwtTokenGenerator
         _jwtSettings = jwtOptions.Value;
     }
 
-    public string GenerateToken(int userId, string firstName, string lastName, string email)
+    public async Task<string> GenerateToken(int userId, string firstName, string lastName, string email)
     {
         var signingCredentials = new SigningCredentials(
             new SymmetricSecurityKey(

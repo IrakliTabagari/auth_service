@@ -16,7 +16,7 @@ public sealed class Repository<TEntity, TIdentity> : IRepository<TEntity, TIdent
         this._dbSet = dbContext.Set<TEntity>();
     }
 
-    public IEnumerable<TEntity> Get(
+    public async Task<List<TEntity>> FindListAsync(
         Expression<Func<TEntity, bool>>? filter = null,
         Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
         string includeProperties = "")
@@ -36,12 +36,30 @@ public sealed class Repository<TEntity, TIdentity> : IRepository<TEntity, TIdent
 
         if (orderBy != null)
         {
-            return orderBy(query).ToList();
+            return await orderBy(query).ToListAsync();
         }
-        else
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<TEntity?> FindOneAsync(
+        Expression<Func<TEntity, bool>>? filter = null,
+        string includeProperties = "")
+    {
+        IQueryable<TEntity> query = _dbSet;
+
+        if (filter != null)
         {
-            return query.ToList();
+            query = query.Where(filter);
         }
+
+        foreach (var includeProperty in includeProperties.Split
+                     (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            query = query.Include(includeProperty);
+        }
+
+        return await query.FirstOrDefaultAsync();
     }
 
     public IQueryable<TEntity> Query()
@@ -54,28 +72,28 @@ public sealed class Repository<TEntity, TIdentity> : IRepository<TEntity, TIdent
         return _dbSet.Where(filter).AsQueryable();
     }
     
-    public bool Any(Expression<Func<TEntity, bool>> filter)
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> filter)
     {
-        return _dbSet.Any(filter);
+        return await _dbSet.AnyAsync(filter);
     }
 
-    public TEntity GetById(TIdentity id)
+    public async Task<TEntity?> GetByIdAsync(TIdentity id)
     {
-        return _dbSet.Find(id);
+        return await _dbSet.FindAsync(id);
     }
 
-    public void Insert(TEntity entity)
+    public async Task InsertAsync(TEntity entity)
     {
-        _dbSet.Add(entity);
+        await _dbSet.AddAsync(entity);
     }
 
-    public void Delete(TIdentity id)
+    public async Task DeleteAsync(TIdentity id)
     {
-        var entityToDelete = _dbSet.Find(id);
-        Delete(entityToDelete);
+        var entityToDelete = await _dbSet.FindAsync(id);
+        await DeleteAsync(entityToDelete);
     }
 
-    public void Delete(TEntity entityToDelete)
+    public async Task DeleteAsync(TEntity entityToDelete)
     {
         if (_dbContext.Entry(entityToDelete).State == EntityState.Detached)
         {
@@ -84,13 +102,13 @@ public sealed class Repository<TEntity, TIdentity> : IRepository<TEntity, TIdent
         _dbSet.Remove(entityToDelete);
     }
 
-    public void Update(TEntity entityToUpdate)
+    public async Task UpdateAsync(TEntity entityToUpdate)
     {
         _dbSet.Attach(entityToUpdate);
         _dbContext.Entry(entityToUpdate).State = EntityState.Modified;
     }
 
-    public void DeleteRange(Expression<Func<TEntity, bool>> filter)
+    public async Task DeleteRangeAsync(Expression<Func<TEntity, bool>> filter)
     {
         throw new NotImplementedException();
     }
